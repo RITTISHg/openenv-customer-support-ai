@@ -1,0 +1,15 @@
+# OpenEnv Customer Support Environment
+# Core dependencies
+pydantic>=2.0,<3.0
+pyyaml>=6.0
+
+# HTTP server (HF Space deployment)
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# Inference (OpenAI client — mandatory per submission guidelines)
+openai>=1.0
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0

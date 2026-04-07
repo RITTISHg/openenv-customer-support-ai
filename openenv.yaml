@@ -1,0 +1,117 @@
+# OpenEnv Environment Configuration
+# AI Customer Support Ticket Resolution Environment
+
+name: openenv-support
+version: "1.0.0"
+description: >
+  A production-inspired customer support ticket resolution environment
+  where an AI agent receives tickets, inspects context, and performs
+  actions (reply, request_info, escalate, close). Features deterministic
+  grading with shaped rewards across three difficulty levels.
+
+author: "OpenEnv Team"
+license: "MIT"
+tags:
+  - openenv
+  - customer-support
+  - text-based
+  - deterministic-grading
+
+# Entry points
+entry_points:
+  environment: "src.env:SupportEnv"
+  grader: "src.grader:grade_step"
+  baseline: "scripts/run_baseline.py"
+  evaluate: "scripts/evaluate.py"
+
+# Environment specification
+environment:
+  type: "text"
+  observation_space:
+    type: "structured"
+    fields:
+      - name: ticket_id
+        type: string
+        description: "Unique ticket identifier"
+      - name: customer_message
+        type: string
+        description: "Latest customer message"
+      - name: issue_type
+        type: enum
+        values: [delivery, refund, billing, technical, account, general]
+      - name: priority
+        type: enum
+        values: [low, medium, high, urgent]
+      - name: customer_tone
+        type: enum
+        values: [neutral, frustrated, angry, polite, confused]
+      - name: conversation_history
+        type: list
+        description: "List of {role, content} message dicts"
+      - name: remaining_steps
+        type: integer
+        description: "Steps remaining before forced episode end"
+      - name: metadata
+        type: dict
+        description: "Extra ticket metadata"
+
+  action_space:
+    type: "structured"
+    fields:
+      - name: action_type
+        type: enum
+        values: [reply, request_info, escalate, close]
+      - name: message
+        type: string
+        description: "Free-text response to the customer"
+      - name: category
+        type: string
+        description: "Agent's classification of the issue"
+      - name: escalation_reason
+        type: string
+        description: "Reason for escalation (if applicable)"
+
+  reward_range: [-1.0, 1.0]
+  deterministic: true
+
+# Task definitions
+tasks:
+  - name: easy
+    title: "Order Delayed Complaint"
+    description: "Classify a delivery complaint and reply appropriately"
+    max_steps: 5
+    difficulty: easy
+    success_criteria:
+      - "Correct category classification (delivery)"
+      - "Correct action choice (reply)"
+      - "No destructive close"
+
+  - name: medium
+    title: "Refund Request — Missing Order Number"
+    description: "Handle a refund request where the order number is missing"
+    max_steps: 7
+    difficulty: medium
+    success_criteria:
+      - "Identify missing order number"
+      - "Request information or escalate appropriately"
+      - "No premature close"
+
+  - name: hard
+    title: "Multi-Turn Billing Dispute"
+    description: "Resolve a billing dispute with an angry customer across multiple turns"
+    max_steps: 10
+    difficulty: hard
+    success_criteria:
+      - "Correct final resolution"
+      - "Professional and empathetic tone throughout"
+      - "Policy compliance"
+      - "Complete resolution with all details"
+
+# Reward signals
+reward_design:
+  correct_classification: [0.2, 0.3]
+  correct_action_choice: [0.3, 0.4]
+  response_quality: [0.2, 0.3]
+  correct_resolution: [0.2, 0.4]
+  unsafe_behavior_penalty: [-0.2, -1.0]
+  repeat_action_penalty: -0.05
