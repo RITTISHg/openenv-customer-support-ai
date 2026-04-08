@@ -138,7 +138,12 @@ async def close():
     return {"status": "closed"}
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for [project.scripts] — runs the HTTP server."""
     import uvicorn
     port = int(os.getenv("PORT", "7860"))  # HF Spaces default port
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+
+if __name__ == "__main__":
+    main()
